@@ -43,3 +43,7 @@ next-env.d.ts
 # photos
 public/photos
 public/info
+public/students
+
+# face indexes
+face_indexes

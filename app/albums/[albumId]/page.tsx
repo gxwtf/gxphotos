@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, MapPin, Eye } from 'lucide-react';
+import { ChevronLeft, MapPin, Eye, User } from 'lucide-react';
 
 interface AlbumInfo {
   id: string;
@@ -117,6 +117,15 @@ export default function AlbumDetailPage() {
               共 {photos.length} 张照片
             </div>
           </div>
+
+          {/* 找自己按钮 */}
+          <Button
+            onClick={() => router.push(`/albums/${albumId}/find`)}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <User className="w-4 h-4 mr-2" />
+            找自己
+          </Button>
         </div>
 
         {/* 照片库 */}
