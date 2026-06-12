@@ -89,6 +89,8 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
             download: false,
             showZoomInOutIcons: true,
             thumbnail: true,
+            zoomFromOrigin: false,
+            // animateThumb: false,
             mobileSettings: {
               showCloseIcon: true,
               showZoomInOutIcons: true,
