@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, MapPin, Eye, User, ExternalLink } from 'lucide-react';
+import { ChevronLeft, MapPin, Eye, User, ExternalLink, Download } from 'lucide-react';
 
 interface AlbumInfo {
   id: string;
@@ -33,7 +34,9 @@ export default function AlbumDetailPage() {
   const [albumInfo, setAlbumInfo] = useState<AlbumInfo | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [visiblePhotoPaths, setVisiblePhotoPaths] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +63,28 @@ export default function AlbumDetailPage() {
     if (albumId) fetchData();
   }, [albumId]);
 
+  const handleDownload = async () => {
+    if (selectedPhotos.size === 0) return;
+
+    const photos = Array.from(selectedPhotos);
+    for (let i = 0; i < photos.length; i++) {
+      const photoPath = photos[i];
+      const res = await fetch(photoPath);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = photoPath.split('/').pop() || `photo_${i}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    setSelectionMode(false);
+    setSelectedPhotos(new Set());
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -67,7 +92,7 @@ export default function AlbumDetailPage() {
           <Skeleton className="w-32 h-10 mb-6" />
           <Skeleton className="w-full h-12 mb-4" />
           <Skeleton className="w-full h-6 mb-8" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="w-full aspect-square rounded-lg" />
             ))}
@@ -145,6 +170,46 @@ export default function AlbumDetailPage() {
                   原直播
                 </Button>
               )}
+              {selectionMode ? (
+                <>
+                  <Button onClick={handleDownload} disabled={selectedPhotos.size === 0}>
+                    <Download className="w-4 h-4 mr-2" />
+                    下载选中 ({selectedPhotos.size})
+                  </Button>
+                  <Button variant="ghost" onClick={() => {
+                    setSelectionMode(false);
+                    setSelectedPhotos(new Set());
+                  }}>
+                    取消
+                  </Button>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={visiblePhotoPaths.length > 0 && visiblePhotoPaths.every(p => selectedPhotos.has(p))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedPhotos(prev => {
+                            const next = new Set(prev);
+                            visiblePhotoPaths.forEach(p => next.add(p));
+                            return next;
+                          });
+                        } else {
+                          setSelectedPhotos(prev => {
+                            const next = new Set(prev);
+                            visiblePhotoPaths.forEach(p => next.delete(p));
+                            return next;
+                          });
+                        }
+                      }}
+                    />
+                    <span className="text-sm">全选</span>
+                  </label>
+                </>
+              ) : (
+                <Button variant="outline" onClick={() => setSelectionMode(true)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  批量下载
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -155,7 +220,13 @@ export default function AlbumDetailPage() {
             <p className="text-gray-500 text-lg">还没有照片</p>
           </div>
         ) : (
-          <PhotoGallery photos={photos} />
+          <PhotoGallery
+            photos={photos}
+            selectionMode={selectionMode}
+            selectedPhotos={selectedPhotos}
+            onSelectionChange={setSelectedPhotos}
+            onVisiblePhotosChange={setVisiblePhotoPaths}
+          />
         )}
       </div>
     </div>

@@ -5,7 +5,6 @@ import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgFullscreen from 'lightgallery/plugins/fullscreen';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -27,13 +26,17 @@ interface Photo {
 
 interface PhotoGalleryProps {
   photos: Photo[];
+  selectionMode?: boolean;
+  selectedPhotos?: Set<string>;
+  onSelectionChange?: (selected: Set<string>) => void;
+  onVisiblePhotosChange?: (paths: string[]) => void;
 }
 
 interface GroupedPhotos {
   [key: string]: Photo[];
 }
 
-export default function PhotoGallery({ photos }: PhotoGalleryProps) {
+export default function PhotoGallery({ photos, selectionMode = false, selectedPhotos = new Set(), onSelectionChange, onVisiblePhotosChange }: PhotoGalleryProps) {
   const galleryRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
   const lgInstances = React.useRef<{ [key: string]: any }>({});
   const [selectedDate, setSelectedDate] = useState<string>('all');
@@ -68,8 +71,10 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
     }
   }, [photos]);
 
-  // 初始化 lightGallery
+  // 初始化 lightGallery（非选中模式）
   useEffect(() => {
+    if (selectionMode) return;
+
     const hasDateFilter = dates.length > 0;
     const galleryKey = hasDateFilter ? selectedDate : 'all';
     const container = galleryRefs.current[galleryKey];
@@ -115,7 +120,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
     return () => {
       clearTimeout(timer);
     };
-  }, [selectedDate, groupedPhotos, dates.length]);
+  }, [selectedDate, groupedPhotos, dates.length, selectionMode]);
 
   const formatDate = (dateStr: string) => {
     if (dateStr === 'all') return '全部';
@@ -126,6 +131,20 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
   };
 
   const currentPhotos = groupedPhotos[selectedDate] || [];
+
+  useEffect(() => {
+    onVisiblePhotosChange?.(currentPhotos.map(p => p.path));
+  }, [currentPhotos, onVisiblePhotosChange]);
+
+  const toggleSelection = (photoPath: string) => {
+    const next = new Set(selectedPhotos);
+    if (next.has(photoPath)) {
+      next.delete(photoPath);
+    } else {
+      next.add(photoPath);
+    }
+    onSelectionChange?.(next);
+  };
 
   return (
     <div>
@@ -169,7 +188,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
       {/* 照片网格 */}
       <div
         ref={el => {
-          if (el) galleryRefs.current[selectedDate] = el;
+          if (el && !selectionMode) galleryRefs.current[selectedDate] = el;
         }}
         className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
       >
@@ -177,23 +196,59 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
           return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
-        }).map((photo) => (
-          <a
-            key={photo.path}
-            href={photo.path}
-            data-lg-size="1280-720"
-            className="group relative overflow-hidden rounded-lg"
-          >
-            <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-              <img
-                src={photo.path}
-                alt={photo.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-            </div>
-          </a>
-        ))}
+        }).map((photo) => {
+          const isSelected = selectedPhotos.has(photo.path);
+
+          if (selectionMode) {
+            return (
+              <div
+                key={photo.path}
+                onClick={() => toggleSelection(photo.path)}
+                className="relative overflow-hidden rounded-lg cursor-pointer select-none"
+              >
+                <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                  <img
+                    src={photo.path}
+                    alt={photo.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* 选中圆圈 */}
+                <div
+                  className={`absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                    isSelected
+                      ? 'bg-primary border-primary text-white'
+                      : 'border-white bg-black/30'
+                  }`}
+                >
+                  {isSelected && (
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <a
+              key={photo.path}
+              href={photo.path}
+              data-lg-size="1280-720"
+              className="group relative overflow-hidden rounded-lg"
+            >
+              <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <img
+                  src={photo.path}
+                  alt={photo.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+              </div>
+            </a>
+          );
+        })}
       </div>
     </div>
   );

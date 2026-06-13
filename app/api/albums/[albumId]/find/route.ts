@@ -1,4 +1,46 @@
 import { NextResponse } from 'next/server';
+import { readFileSync, existsSync, statSync } from 'fs';
+import { join } from 'path';
+import ExifParser from 'exif-parser';
+
+const PHOTOS_DIR = join(process.cwd(), 'public/photos');
+
+function getExifDate(filePath: string): string | null {
+  try {
+    const buffer = readFileSync(filePath);
+    const parser = ExifParser.create(buffer);
+    const result = parser.parse();
+
+    if (result.tags?.DateTimeOriginal) {
+      const dateStr = result.tags.DateTimeOriginal as string;
+      const [date] = dateStr.split(' ');
+      const [year, month, day] = date.split(':');
+      return `${year}-${month}-${day}`;
+    }
+
+    if (result.tags?.DateTime) {
+      const dateStr = result.tags.DateTime as string;
+      const [date] = dateStr.split(' ');
+      const [year, month, day] = date.split(':');
+      return `${year}-${month}-${day}`;
+    }
+  } catch {
+    // silently fail
+  }
+
+  return null;
+}
+
+function getFileDate(filePath: string): string {
+  const stat = statSync(filePath);
+  return stat.mtime.toISOString().split('T')[0];
+}
+
+function getPhotoDate(albumId: string, filename: string): string {
+  const filePath = join(PHOTOS_DIR, albumId, filename);
+  if (!existsSync(filePath)) return new Date().toISOString().split('T')[0];
+  return getExifDate(filePath) || getFileDate(filePath);
+}
 
 // 从环境变量读取人脸服务地址，默认值作为备选
 const FACE_API_URL = process.env.NEXT_PUBLIC_FACE_API_URL || 'http://localhost:8001';
@@ -38,6 +80,7 @@ export async function POST(
     const photos = data.photos.map((name: string) => ({
       name: name,
       path: `/photos/${albumId}/${name}`,
+      shotDate: getPhotoDate(albumId, name),
     }));
 
     return NextResponse.json({ photos });

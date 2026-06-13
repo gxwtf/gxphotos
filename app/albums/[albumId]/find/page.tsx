@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, Search, User, Loader2 } from 'lucide-react';
+import { ChevronLeft, Search, User, Loader2, Download } from 'lucide-react';
 
 interface Photo {
   name: string;
@@ -24,13 +24,16 @@ export default function FindYourselfPage() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [visiblePhotoPaths, setVisiblePhotoPaths] = useState<string[]>([]);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
-    
+
     setLoading(true);
     setNotFound(false);
-    
+
     try {
       const res = await fetch(`/api/albums/${albumId}/find`, {
         method: 'POST',
@@ -65,6 +68,28 @@ export default function FindYourselfPage() {
     setSearched(false);
     setNotFound(false);
   }, [albumId]);
+
+  const handleDownload = async () => {
+    if (selectedPhotos.size === 0) return;
+
+    const photosList = Array.from(selectedPhotos);
+    for (let i = 0; i < photosList.length; i++) {
+      const photoPath = photosList[i];
+      const res = await fetch(photoPath);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = photoPath.split('/').pop() || `photo_${i}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    setSelectionMode(false);
+    setSelectedPhotos(new Set());
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -129,8 +154,54 @@ export default function FindYourselfPage() {
               <h2 className="text-xl font-semibold text-gray-800">
                 找到 {photos.length} 张包含你的照片
               </h2>
+              {selectionMode ? (
+                <div className="flex items-center gap-3">
+                  <Button onClick={handleDownload} disabled={selectedPhotos.size === 0} size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    下载选中 ({selectedPhotos.size})
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setSelectionMode(false);
+                    setSelectedPhotos(new Set());
+                  }}>
+                    取消
+                  </Button>
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <Checkbox
+                      checked={visiblePhotoPaths.length > 0 && visiblePhotoPaths.every(p => selectedPhotos.has(p))}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedPhotos(prev => {
+                            const next = new Set(prev);
+                            visiblePhotoPaths.forEach(p => next.add(p));
+                            return next;
+                          });
+                        } else {
+                          setSelectedPhotos(prev => {
+                            const next = new Set(prev);
+                            visiblePhotoPaths.forEach(p => next.delete(p));
+                            return next;
+                          });
+                        }
+                      }}
+                    />
+                    <span className="text-sm">全选</span>
+                  </label>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setSelectionMode(true)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  批量下载
+                </Button>
+              )}
             </div>
-            <PhotoGallery photos={photos} />
+            <PhotoGallery
+              photos={photos}
+              selectionMode={selectionMode}
+              selectedPhotos={selectedPhotos}
+              onSelectionChange={setSelectedPhotos}
+              onVisiblePhotosChange={setVisiblePhotoPaths}
+            />
           </div>
         ) : (
           <div className="text-center py-16">
