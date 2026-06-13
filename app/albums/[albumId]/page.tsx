@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, MapPin, Eye, User } from 'lucide-react';
+import { ChevronLeft, MapPin, Eye, User, ExternalLink } from 'lucide-react';
 
 interface AlbumInfo {
   id: string;
@@ -15,6 +15,8 @@ interface AlbumInfo {
   shootDate: string;
   endDate: string;
   viewCount: number;
+  liveUrl?: string;
+  coverImage?: string;
 }
 
 interface Photo {
@@ -100,32 +102,51 @@ export default function AlbumDetailPage() {
         </Button>
 
         {/* 相册信息 */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">{albumInfo.title}</h1>
-          <p className="text-gray-700 text-lg mb-4">{albumInfo.description}</p>
+        <div className="mb-8 flex flex-col lg:flex-row gap-8 items-start">
+          {/* 左侧封面图 */}
+          {albumInfo.coverImage && (
+            <div className="lg:w-1/3 rounded-lg overflow-hidden shadow-lg flex-shrink-0">
+              <img
+                src={`/info/${albumId}/${albumInfo.coverImage}`}
+                alt={`${albumInfo.title} 封面`}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          )}
 
-          <div className="flex flex-col md:flex-row gap-6 text-gray-600">
-            <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
-              <span>{albumInfo.viewCount.toLocaleString()} 人次浏览</span>
+          {/* 右侧信息 */}
+          <div className="flex-1 lg:w-2/3">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">{albumInfo.title}</h1>
+            <p className="text-gray-700 text-lg mb-6">{albumInfo.description}</p>
+
+            <div className="flex flex-wrap gap-4 text-gray-600 mb-6">
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-primary" />
+                <span>{albumInfo.viewCount.toLocaleString()} 人次浏览</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                <span>{albumInfo.location}</span>
+              </div>
+              <div className="text-gray-500">
+                共 {photos.length} 张照片
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-blue-600" />
-              <span>{albumInfo.location}</span>
-            </div>
-            <div className="text-gray-500">
-              共 {photos.length} 张照片
+
+            {/* 功能按钮 */}
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => router.push(`/albums/${albumId}/find`)}>
+                <User className="w-4 h-4 mr-2" />
+                找自己
+              </Button>
+              {albumInfo.liveUrl && (
+                <Button variant="outline" onClick={() => window.open(albumInfo.liveUrl, '_blank')}>
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  原直播
+                </Button>
+              )}
             </div>
           </div>
-
-          {/* 找自己按钮 */}
-          <Button
-            onClick={() => router.push(`/albums/${albumId}/find`)}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <User className="w-4 h-4 mr-2" />
-            找自己
-          </Button>
         </div>
 
         {/* 照片库 */}

@@ -58,7 +58,7 @@ export default function AlbumsPage() {
               onClick={() => setSortOrder('desc')}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 sortOrder === 'desc'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
@@ -68,7 +68,7 @@ export default function AlbumsPage() {
               onClick={() => setSortOrder('asc')}
               className={`px-4 py-2 rounded-lg transition-colors ${
                 sortOrder === 'asc'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary text-primary-foreground'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >

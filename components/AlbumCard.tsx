@@ -10,6 +10,7 @@ interface Album {
     location: string;
     shootDate: string;
     endDate: string;
+    coverImage?: string;
 }
 
 interface AlbumCardProps {
@@ -35,14 +36,20 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
         <Link href={`/albums/${album.id}`}>
             <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
-                    {thumbnailUrl ? (
+                    {album.coverImage ? (
+                        <img
+                            src={`/info/${album.id}/${album.coverImage}`}
+                            alt={album.title}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                    ) : thumbnailUrl ? (
                         <img
                             src={thumbnailUrl}
                             alt={album.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
                             <svg
                                 className="w-16 h-16 text-white opacity-50"
                                 fill="none"

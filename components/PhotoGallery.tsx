@@ -5,6 +5,7 @@ import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgFullscreen from 'lightgallery/plugins/fullscreen';
+import { Button } from '@/components/ui/button';
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -110,10 +111,9 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
   const formatDate = (dateStr: string) => {
     if (dateStr === 'all') return '全部';
     const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('zh-CN', {
-      month: 'numeric',
-      day: 'numeric',
-    });
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}.${day}`;
   };
 
   const currentPhotos = groupedPhotos[selectedDate] || [];
@@ -124,17 +124,14 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
       {dates.length > 0 && (
         <div className="mb-6 flex flex-wrap gap-2">
           {dates.map(date => (
-            <button
+            <Button
               key={date}
               onClick={() => setSelectedDate(date)}
-              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                selectedDate === date
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              variant={selectedDate === date ? "default" : "ghost"}
+              size="sm"
             >
               {formatDate(date)} {date !== 'all' && `(${groupedPhotos[date]?.length || 0})`}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -144,7 +141,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
         ref={el => {
           if (el) galleryRefs.current[selectedDate] = el;
         }}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
       >
         {currentPhotos.map((photo) => (
           <a
@@ -161,9 +158,6 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
-            <p className="text-xs text-gray-600 mt-2 truncate">
-              {photo.name}
-            </p>
           </a>
         ))}
       </div>

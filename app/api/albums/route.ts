@@ -91,6 +91,7 @@ export async function GET() {
         location: '',
         shootDate,
         endDate,
+        coverImage: '',
       };
 
       if (existsSync(infoPath)) {
