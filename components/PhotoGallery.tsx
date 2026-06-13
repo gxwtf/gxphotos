@@ -96,7 +96,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           lgInstances.current[galleryKey] = lightGallery(container, {
             plugins: [lgThumbnail, lgZoom, lgFullscreen],
             speed: 500,
-            download: false,
+            download: true,
             showZoomInOutIcons: true,
             thumbnail: true,
             zoomFromOrigin: false,
@@ -188,7 +188,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
               <img
                 src={photo.path}
                 alt={photo.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
             </div>
