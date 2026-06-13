@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "face:build": "python scripts/face_matcher.py build",
-    "face:search": "python scripts/face_matcher.py search"
+    "face:search": "python scripts/face_matcher.py search",
+    "face:serve": "python scripts/face_api.py",
+    "face:serve:gpu": "python scripts/face_api.py --gpu"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
