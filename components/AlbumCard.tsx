@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronRight } from 'lucide-react';
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Calendar } from 'lucide-react';
 
 interface Album {
     id: string;
@@ -26,27 +26,24 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
             day: 'numeric',
         });
     };
-    
-    const isSameDay = album.shootDate === album.endDate;
-    const dateDisplay = isSameDay 
-        ? formatDate(album.shootDate)
-        : `${formatDate(album.shootDate)} - ${formatDate(album.endDate)}`;
+
+    const dateDisplay = formatDate(album.shootDate)
 
     return (
-        <Link href={`/albums/${album.id}`}>
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+        <Link href={`/albums/${album.id}`} className="block group">
+            <Card className="relative mx-auto w-full pt-0 overflow-hidden cursor-pointer">
+                <div className="relative aspect-video overflow-hidden">
                     {album.coverImage ? (
                         <img
                             src={`/info/${album.id}/${album.coverImage}`}
                             alt={album.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="relative z-20 w-full h-full object-cover"
                         />
                     ) : thumbnailUrl ? (
                         <img
                             src={thumbnailUrl}
                             alt={album.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="relative z-20 w-full h-full object-cover"
                         />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
@@ -70,21 +67,18 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
                     <CardTitle className="line-clamp-2">{album.title}</CardTitle>
                     <CardDescription className="line-clamp-2">{album.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-2 text-sm">
-                        <div className="flex items-start gap-2">
-                            <span className="text-gray-500">📍</span>
-                            <span className="text-gray-700">{album.location}</span>
+                <CardFooter className="pt-0">
+                    <div className="w-full flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>{album.location || '未知地点'}</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-start gap-2">
-                                <span className="text-gray-500">📅</span>
-                                <span className="text-gray-700">{dateDisplay}</span>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span className="truncate max-w-[120px]">{dateDisplay}</span>
                         </div>
                     </div>
-                </CardContent>
+                </CardFooter>
             </Card>
         </Link>
     );

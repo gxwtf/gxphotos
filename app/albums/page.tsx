@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AlbumCard from '@/components/AlbumCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 interface Album {
   id: string;
@@ -11,6 +12,7 @@ interface Album {
   location: string;
   shootDate: string;
   endDate: string;
+  coverImage?: string;
 }
 
 export default function AlbumsPage() {
@@ -42,38 +44,29 @@ export default function AlbumsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 头部 */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">照片相册</h1>
-          <p className="text-gray-600">浏览所有的照片和视频相册</p>
         </div>
 
         {/* 排序控制 */}
         <div className="mb-6 flex items-center gap-4">
           <span className="text-gray-700 font-medium">排序方式：</span>
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => setSortOrder('desc')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                sortOrder === 'desc'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              variant={sortOrder === 'desc' ? 'default' : 'outline'}
             >
               按时间倒序
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setSortOrder('asc')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                sortOrder === 'asc'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              variant={sortOrder === 'asc' ? 'default' : 'outline'}
             >
               按时间顺序
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -82,8 +75,8 @@ export default function AlbumsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="space-y-4">
-                <Skeleton className="w-full h-48 rounded-lg" />
-                <Skeleton className="w-full h-20" />
+                <Skeleton className="w-full aspect-video rounded-lg" />
+                <Skeleton className="w-full h-28" />
               </div>
             ))}
           </div>

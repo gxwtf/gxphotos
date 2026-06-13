@@ -6,6 +6,14 @@ import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgFullscreen from 'lightgallery/plugins/fullscreen';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -29,6 +37,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
   const galleryRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
   const lgInstances = React.useRef<{ [key: string]: any }>({});
   const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedPhotos>({});
   const [dates, setDates] = useState<string[]>([]);
 
@@ -50,7 +59,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
 
     const sortedDates = Array.from(datesSet).sort().reverse();
     setGroupedPhotos(grouped);
-    
+
     // 如果所有照片都是同一天，就不显示日期分类
     if (sortedDates.length <= 1) {
       setDates([]);
@@ -64,7 +73,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
     const hasDateFilter = dates.length > 0;
     const galleryKey = hasDateFilter ? selectedDate : 'all';
     const container = galleryRefs.current[galleryKey];
-    
+
     if (!container || groupedPhotos[galleryKey]?.length === 0) return;
 
     // 销毁之前的实例
@@ -120,19 +129,40 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
 
   return (
     <div>
-      {/* 日期筛选 */}
+      {/* 筛选区域 */}
       {dates.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {dates.map(date => (
-            <Button
-              key={date}
-              onClick={() => setSelectedDate(date)}
-              variant={selectedDate === date ? "default" : "ghost"}
-              size="sm"
-            >
-              {formatDate(date)} {date !== 'all' && `(${groupedPhotos[date]?.length || 0})`}
-            </Button>
-          ))}
+        <div className="mb-6">
+          <div className="flex items-start justify-between gap-4">
+            {/* 日期筛选 - Tabs */}
+            <Tabs value={selectedDate} onValueChange={setSelectedDate} className="flex-1">
+              <TabsList variant="line" className="flex flex-wrap justify-start border-b-primary">
+                {dates.map(date => (
+                  <TabsTrigger 
+                    key={date} 
+                    value={date} 
+                    className="flex-shrink-0 data-[state=active]:text-primary data-[state=active]:border-b-primary"
+                  >
+                    {formatDate(date)} {date !== 'all' && `(${groupedPhotos[date]?.length || 0})`}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            {/* 排序 Select */}
+            <div className="flex-shrink-0">
+              <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="排序">
+                    {sortOrder === 'desc' ? '从晚到早' : '从早到晚'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">从晚到早</SelectItem>
+                  <SelectItem value="asc">从早到晚</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       )}
 
@@ -143,7 +173,11 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
         }}
         className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
       >
-        {currentPhotos.map((photo) => (
+        {[...currentPhotos].sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+          return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
+        }).map((photo) => (
           <a
             key={photo.path}
             href={photo.path}
