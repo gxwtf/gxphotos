@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
@@ -247,8 +248,9 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
           return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
-        }).slice(0, visibleCount).map((photo) => {
+        }).map((photo, index) => {
           const isSelected = selectedPhotos.has(photo.path);
+          const isImageLoaded = index < visibleCount;
 
           if (selectionMode) {
             return (
@@ -258,11 +260,17 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                 className="relative overflow-hidden rounded-lg cursor-pointer select-none"
               >
                 <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  <img
-                    src={photo.path}
-                    alt={photo.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {isImageLoaded ? (
+                    <Image
+                      src={photo.path}
+                      alt={photo.name}
+                      fill
+                      sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full animate-pulse bg-gray-200" />
+                  )}
                 </div>
                 {/* 选中圆圈 */}
                 <div
@@ -287,14 +295,21 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               key={photo.path}
               href={photo.path}
               data-lg-size="1280-720"
+              data-lg-thumb={photo.path}
               className="group relative overflow-hidden rounded-lg"
             >
               <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                <img
-                  src={photo.path}
-                  alt={photo.name}
-                  className="w-full h-full object-cover"
-                />
+                {isImageLoaded ? (
+                  <Image
+                    src={photo.path}
+                    alt={photo.name}
+                    fill
+                    sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full animate-pulse bg-gray-200" />
+                )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
             </a>
