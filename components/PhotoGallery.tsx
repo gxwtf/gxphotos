@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Spinner } from '@/components/ui/spinner';
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -36,13 +37,18 @@ interface GroupedPhotos {
   [key: string]: Photo[];
 }
 
+const BATCH_SIZE = 30;
+
 export default function PhotoGallery({ photos, selectionMode = false, selectedPhotos = new Set(), onSelectionChange, onVisiblePhotosChange }: PhotoGalleryProps) {
   const galleryRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
   const lgInstances = React.useRef<{ [key: string]: any }>({});
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedPhotos>({});
   const [dates, setDates] = useState<string[]>([]);
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // 分组照片按照拍摄日期
   useEffect(() => {
@@ -70,6 +76,42 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
       setDates(['all', ...sortedDates]);
     }
   }, [photos]);
+
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [selectedDate, photos]);
+
+  const loadMore = useCallback(() => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => {
+        const currentPhotos = groupedPhotos[selectedDate] || [];
+        const next = Math.min(prev + BATCH_SIZE, currentPhotos.length);
+        return next;
+      });
+      setLoadingMore(false);
+    }, 300);
+  }, [selectedDate, groupedPhotos]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore) {
+          const currentPhotos = groupedPhotos[selectedDate] || [];
+          if (visibleCount < currentPhotos.length) {
+            loadMore();
+          }
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, loadingMore, loadMore, groupedPhotos, selectedDate]);
 
   // 初始化 lightGallery（非选中模式）
   useEffect(() => {
@@ -205,7 +247,7 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
           return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
-        }).map((photo) => {
+        }).slice(0, visibleCount).map((photo) => {
           const isSelected = selectedPhotos.has(photo.path);
 
           if (selectionMode) {
@@ -258,6 +300,13 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
             </a>
           );
         })}
+      </div>
+
+      <div ref={sentinelRef} className="flex justify-center py-8">
+        {loadingMore && <Spinner className="w-6 h-6" />}
+        {!loadingMore && visibleCount < currentPhotos.length && (
+          <span className="text-sm text-gray-400">{currentPhotos.length - visibleCount} 张更多照片</span>
+        )}
       </div>
     </div>
   );
