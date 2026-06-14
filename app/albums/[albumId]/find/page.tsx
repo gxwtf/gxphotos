@@ -186,12 +186,12 @@ export default function FindYourselfPage() {
           </div>
         ) : searched && photos.length > 0 ? (
           <div>
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-800">
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+              <h2 className="text-xl font-semibold text-gray-800 whitespace-nowrap">
                 找到 {photos.length} 张包含你的照片
               </h2>
               {selectionMode ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap justify-end">
                   <Button onClick={handleDownload} disabled={selectedPhotos.size === 0} size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     下载选中 ({selectedPhotos.size})
