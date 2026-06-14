@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
@@ -243,7 +243,7 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                {rowPhotos.map(photo => {
+                {rowPhotos.map((photo, colIdx) => {
                   const isSelected = selectedPhotos.has(photo.path);
 
                   if (selectionMode) {
@@ -284,6 +284,11 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                       key={photo.path}
                       href={photo.path}
                       data-lg-thumb={photo.path}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const globalIdx = startIdx + colIdx;
+                        lgInstanceRef.current?.openGallery?.(globalIdx);
+                      }}
                       className="group relative overflow-hidden rounded-lg"
                     >
                       <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
