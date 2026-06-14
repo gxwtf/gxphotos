@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Spinner } from '@/components/ui/spinner';
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -38,20 +37,14 @@ interface GroupedPhotos {
   [key: string]: Photo[];
 }
 
-const BATCH_SIZE = 30;
-
 export default function PhotoGallery({ photos, selectionMode = false, selectedPhotos = new Set(), onSelectionChange, onVisiblePhotosChange }: PhotoGalleryProps) {
   const galleryRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
   const lgInstances = React.useRef<{ [key: string]: any }>({});
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedPhotos>({});
   const [dates, setDates] = useState<string[]>([]);
-  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
-  const [loadingMore, setLoadingMore] = useState(false);
 
-  // 分组照片按照拍摄日期
   useEffect(() => {
     const grouped: GroupedPhotos = { all: [] };
     const datesSet = new Set<string>();
@@ -70,7 +63,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
     const sortedDates = Array.from(datesSet).sort().reverse();
     setGroupedPhotos(grouped);
 
-    // 如果所有照片都是同一天，就不显示日期分类
     if (sortedDates.length <= 1) {
       setDates([]);
     } else {
@@ -78,43 +70,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
     }
   }, [photos]);
 
-  useEffect(() => {
-    setVisibleCount(BATCH_SIZE);
-  }, [selectedDate, photos]);
-
-  const loadMore = useCallback(() => {
-    setLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount(prev => {
-        const currentPhotos = groupedPhotos[selectedDate] || [];
-        const next = Math.min(prev + BATCH_SIZE, currentPhotos.length);
-        return next;
-      });
-      setLoadingMore(false);
-    }, 300);
-  }, [selectedDate, groupedPhotos]);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !loadingMore) {
-          const currentPhotos = groupedPhotos[selectedDate] || [];
-          if (visibleCount < currentPhotos.length) {
-            loadMore();
-          }
-        }
-      },
-      { rootMargin: '200px' }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [visibleCount, loadingMore, loadMore, groupedPhotos, selectedDate]);
-
-  // 初始化 lightGallery（非选中模式）
   useEffect(() => {
     if (selectionMode) return;
 
@@ -124,7 +79,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
 
     if (!container || groupedPhotos[galleryKey]?.length === 0) return;
 
-    // 销毁之前的实例
     Object.values(lgInstances.current).forEach(instance => {
       if (instance) {
         try {
@@ -141,7 +95,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
     const timer = setTimeout(() => {
       try {
         if (container && container.children.length > 0) {
-          // 屏蔽 lightGallery 的 license key 警告
           const originalWarn = console.warn;
           console.warn = (...args: unknown[]) => {
             if (typeof args[0] === 'string' && args[0].includes('license key')) return;
@@ -155,7 +108,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
             showZoomInOutIcons: true,
             thumbnail: true,
             zoomFromOrigin: false,
-            // animateThumb: false,
             mobileSettings: {
               showCloseIcon: true,
               showZoomInOutIcons: true,
@@ -200,11 +152,9 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
 
   return (
     <div>
-      {/* 筛选区域 */}
       {dates.length > 0 && (
         <div className="mb-6">
           <div className="flex items-start justify-between gap-4">
-            {/* 日期筛选 - Tabs */}
             <Tabs value={selectedDate} onValueChange={setSelectedDate} className="flex-1">
               <TabsList variant="line" className="flex flex-wrap justify-start border-b-primary">
                 {dates.map(date => (
@@ -219,7 +169,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               </TabsList>
             </Tabs>
 
-            {/* 排序 Select */}
             <div className="flex-shrink-0">
               <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
                 <SelectTrigger className="w-36">
@@ -237,7 +186,6 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
         </div>
       )}
 
-      {/* 照片网格 */}
       <div
         ref={el => {
           if (el && !selectionMode) galleryRefs.current[selectedDate] = el;
@@ -248,9 +196,8 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
           return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
-        }).map((photo, index) => {
+        }).map((photo) => {
           const isSelected = selectedPhotos.has(photo.path);
-          const isImageLoaded = index < visibleCount;
 
           if (selectionMode) {
             return (
@@ -260,19 +207,14 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                 className="relative overflow-hidden rounded-lg cursor-pointer select-none"
               >
                 <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  {isImageLoaded ? (
-                    <Image
-                      src={photo.path}
-                      alt={photo.name}
-                      fill
-                      sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full animate-pulse bg-gray-200" />
-                  )}
+                  <Image
+                    src={photo.path}
+                    alt={photo.name}
+                    fill
+                    sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                    className="object-cover"
+                  />
                 </div>
-                {/* 选中圆圈 */}
                 <div
                   className={`absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
                     isSelected
@@ -299,29 +241,18 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               className="group relative overflow-hidden rounded-lg"
             >
               <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                {isImageLoaded ? (
-                  <Image
-                    src={photo.path}
-                    alt={photo.name}
-                    fill
-                    sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full animate-pulse bg-gray-200" />
-                )}
+                <Image
+                  src={photo.path}
+                  alt={photo.name}
+                  fill
+                  sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                  className="object-cover"
+                />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
             </a>
           );
         })}
-      </div>
-
-      <div ref={sentinelRef} className="flex justify-center py-8">
-        {loadingMore && <Spinner className="w-6 h-6" />}
-        {!loadingMore && visibleCount < currentPhotos.length && (
-          <span className="text-sm text-gray-400">{currentPhotos.length - visibleCount} 张更多照片</span>
-        )}
       </div>
     </div>
   );
