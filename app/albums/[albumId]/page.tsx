@@ -6,7 +6,8 @@ import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, MapPin, Eye, User, ExternalLink, Download } from 'lucide-react';
+import { ChevronLeft, MapPin, Eye, User, ExternalLink, Download, Calendar, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface AlbumInfo {
   id: string;
@@ -37,6 +38,11 @@ export default function AlbumDetailPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [visiblePhotoPaths, setVisiblePhotoPaths] = useState<string[]>([]);
+  const [showLimitAlert, setShowLimitAlert] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(0);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+
+  const MAX_DOWNLOAD = 100;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,8 +69,28 @@ export default function AlbumDetailPage() {
     if (albumId) fetchData();
   }, [albumId]);
 
+  // 自动关闭 toast
+  useEffect(() => {
+    if (showLimitAlert) {
+      const timer = setTimeout(() => setShowLimitAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showLimitAlert]);
+
+  useEffect(() => {
+    if (showSuccessAlert) {
+      const timer = setTimeout(() => setShowSuccessAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessAlert]);
+
   const handleDownload = async () => {
     if (selectedPhotos.size === 0) return;
+
+    if (selectedPhotos.size > MAX_DOWNLOAD) {
+      setShowLimitAlert(true);
+      return;
+    }
 
     const photos = Array.from(selectedPhotos);
     for (let i = 0; i < photos.length; i++) {
@@ -81,8 +107,20 @@ export default function AlbumDetailPage() {
       URL.revokeObjectURL(url);
     }
 
+    const count = photos.length;
+    setDownloadCount(count);
+    setShowSuccessAlert(true);
     setSelectionMode(false);
     setSelectedPhotos(new Set());
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   if (loading) {
@@ -123,7 +161,7 @@ export default function AlbumDetailPage() {
           className="mb-6 flex items-center gap-2"
         >
           <ChevronLeft className="w-4 h-4" />
-          返回相册
+          返回首页
         </Button>
 
         {/* 相册信息 */}
@@ -153,6 +191,16 @@ export default function AlbumDetailPage() {
                 <MapPin className="w-5 h-5 text-primary" />
                 <span>{albumInfo.location}</span>
               </div>
+              {albumInfo.shootDate && (
+                <div className="flex items-center gap-1.5 text-gray-600">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span>
+                    {formatDate(albumInfo.shootDate)}
+                    {albumInfo.endDate && albumInfo.endDate !== albumInfo.shootDate &&
+                      ` - ${formatDate(albumInfo.endDate)}`}
+                  </span>
+                </div>
+              )}
               <div className="text-gray-500">
                 共 {photos.length} 张照片
               </div>
@@ -189,7 +237,11 @@ export default function AlbumDetailPage() {
                         if (checked) {
                           setSelectedPhotos(prev => {
                             const next = new Set(prev);
-                            visiblePhotoPaths.forEach(p => next.add(p));
+                            const toAdd = visiblePhotoPaths.slice(0, MAX_DOWNLOAD);
+                            toAdd.forEach(p => next.add(p));
+                            if (visiblePhotoPaths.length > MAX_DOWNLOAD) {
+                              setShowLimitAlert(true);
+                            }
                             return next;
                           });
                         } else {
@@ -227,6 +279,29 @@ export default function AlbumDetailPage() {
             onSelectionChange={setSelectedPhotos}
             onVisiblePhotosChange={setVisiblePhotoPaths}
           />
+        )}
+      </div>
+
+      {/* Toast 通知 */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
+        {showLimitAlert && (
+          <Alert variant="destructive">
+            <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle>超出下载限制</AlertTitle>
+              <AlertDescription>
+                一次最多只能下载 {MAX_DOWNLOAD} 张照片，当前已选中 {selectedPhotos.size} 张。
+                请减少选择数量后重试。
+              </AlertDescription>
+          </Alert>
+        )}
+        {showSuccessAlert && (
+          <Alert>
+            <CheckCircle2Icon />
+              <AlertTitle>下载完成</AlertTitle>
+              <AlertDescription>
+                成功下载 {downloadCount} 张照片。
+              </AlertDescription>
+          </Alert>
         )}
       </div>
     </div>

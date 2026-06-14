@@ -6,7 +6,9 @@ import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { ChevronLeft, Search, User, Loader2, Download } from 'lucide-react';
+import { ChevronLeft, Search, User, Download, AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Photo {
   name: string;
@@ -27,6 +29,11 @@ export default function FindYourselfPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [visiblePhotoPaths, setVisiblePhotoPaths] = useState<string[]>([]);
+  const [showLimitAlert, setShowLimitAlert] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(0);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+
+  const MAX_DOWNLOAD = 100;
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -69,8 +76,28 @@ export default function FindYourselfPage() {
     setNotFound(false);
   }, [albumId]);
 
+  // 自动关闭 toast
+  useEffect(() => {
+    if (showLimitAlert) {
+      const timer = setTimeout(() => setShowLimitAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showLimitAlert]);
+
+  useEffect(() => {
+    if (showSuccessAlert) {
+      const timer = setTimeout(() => setShowSuccessAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessAlert]);
+
   const handleDownload = async () => {
     if (selectedPhotos.size === 0) return;
+
+    if (selectedPhotos.size > MAX_DOWNLOAD) {
+      setShowLimitAlert(true);
+      return;
+    }
 
     const photosList = Array.from(selectedPhotos);
     for (let i = 0; i < photosList.length; i++) {
@@ -87,6 +114,9 @@ export default function FindYourselfPage() {
       URL.revokeObjectURL(url);
     }
 
+    const count = photosList.length;
+    setDownloadCount(count);
+    setShowSuccessAlert(true);
     setSelectionMode(false);
     setSelectedPhotos(new Set());
   };
@@ -111,7 +141,7 @@ export default function FindYourselfPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">找自己</h1>
           <p className="text-gray-600 max-w-md mx-auto">
-            输入你的姓名或数字校园号，我们会帮你在相册中找到所有包含你的照片
+            输入你的姓名或数字校园号，帮你在相册中找到你的所有照片
           </p>
         </div>
 
@@ -119,17 +149,23 @@ export default function FindYourselfPage() {
         <div className="flex gap-3 mb-8 max-w-xl mx-auto">
           <Input
             type="text"
-            placeholder="输入姓名或学号..."
+            placeholder="输入姓名或数字校园号..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1 h-12 text-lg"
+            onKeyDown={handleKeyPress}
+            className="flex-1 text-lg"
           />
-          <Button onClick={handleSearch} disabled={loading || !query.trim()} className="h-12 px-8">
+          <Button onClick={handleSearch} disabled={loading || !query.trim()} >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <>
+                <Spinner className="w-5 h-5" />
+                搜索中
+              </>
             ) : (
-              <Search className="w-5 h-5" />
+              <>
+                <Search className="w-5 h-5" />
+                搜索
+              </>
             )}
           </Button>
         </div>
@@ -137,7 +173,7 @@ export default function FindYourselfPage() {
         {/* 搜索结果 */}
         {loading ? (
           <div className="text-center">
-            <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
+            <Spinner className="w-8 h-8 mx-auto mb-4" />
             <p className="text-gray-500">正在搜索中...</p>
           </div>
         ) : searched && notFound ? (
@@ -173,7 +209,11 @@ export default function FindYourselfPage() {
                         if (checked) {
                           setSelectedPhotos(prev => {
                             const next = new Set(prev);
-                            visiblePhotoPaths.forEach(p => next.add(p));
+                            const toAdd = visiblePhotoPaths.slice(0, MAX_DOWNLOAD);
+                            toAdd.forEach(p => next.add(p));
+                            if (visiblePhotoPaths.length > MAX_DOWNLOAD) {
+                              setShowLimitAlert(true);
+                            }
                             return next;
                           });
                         } else {
@@ -211,6 +251,29 @@ export default function FindYourselfPage() {
             <p className="text-gray-500 text-lg">开始搜索</p>
             <p className="text-gray-400 mt-2">输入姓名或学号，找到你的照片</p>
           </div>
+        )}
+      </div>
+
+      {/* Toast 通知 */}
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
+        {showLimitAlert && (
+          <Alert variant="destructive">
+            <AlertCircleIcon className="h-4 w-4" />
+              <AlertTitle>超出下载限制</AlertTitle>
+              <AlertDescription>
+                一次最多只能下载 {MAX_DOWNLOAD} 张照片，当前已选中 {selectedPhotos.size} 张。
+                请减少选择数量后重试。
+              </AlertDescription>
+          </Alert>
+        )}
+        {showSuccessAlert && (
+          <Alert>
+            <CheckCircle2Icon className="h-4 w-4" />
+              <AlertTitle>下载完成</AlertTitle>
+              <AlertDescription>
+                成功下载 {downloadCount} 张照片。
+              </AlertDescription>
+          </Alert>
         )}
       </div>
     </div>

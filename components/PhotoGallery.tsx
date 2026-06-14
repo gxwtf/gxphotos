@@ -98,6 +98,13 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
     const timer = setTimeout(() => {
       try {
         if (container && container.children.length > 0) {
+          // 屏蔽 lightGallery 的 license key 警告
+          const originalWarn = console.warn;
+          console.warn = (...args: unknown[]) => {
+            if (typeof args[0] === 'string' && args[0].includes('license key')) return;
+            originalWarn.apply(console, args);
+          };
+
           lgInstances.current[galleryKey] = lightGallery(container, {
             plugins: [lgThumbnail, lgZoom, lgFullscreen],
             speed: 500,
@@ -111,6 +118,8 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               showZoomInOutIcons: true,
             },
           });
+
+          console.warn = originalWarn;
         }
       } catch (error) {
         console.error('Error initializing lightGallery:', error);

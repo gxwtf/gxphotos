@@ -3,7 +3,13 @@
 import { useEffect, useState } from 'react';
 import AlbumCard from '@/components/AlbumCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Album {
   id: string;
@@ -44,30 +50,30 @@ export default function AlbumsPage() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 头部 */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">照片相册</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">广学照片直播</h1>
+          <p className="text-gray-500 text-lg">记录每一个精彩瞬间</p>
         </div>
 
         {/* 排序控制 */}
-        <div className="mb-6 flex items-center gap-4">
-          <span className="text-gray-700 font-medium">排序方式：</span>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setSortOrder('desc')}
-              variant={sortOrder === 'desc' ? 'default' : 'outline'}
-            >
-              按时间倒序
-            </Button>
-            <Button
-              onClick={() => setSortOrder('asc')}
-              variant={sortOrder === 'asc' ? 'default' : 'outline'}
-            >
-              按时间顺序
-            </Button>
-          </div>
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-gray-500">
+            共 {albums.length} 个相册
+          </p>
+          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="排序">
+                {sortOrder === 'desc' ? '从晚到早' : '从早到晚'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">从晚到早</SelectItem>
+              <SelectItem value="asc">从早到晚</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 相册网格 */}

@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Calendar } from 'lucide-react';
@@ -20,6 +19,7 @@ interface AlbumCardProps {
 
 export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
     const formatDate = (dateStr: string) => {
+        if (!dateStr) return '';
         return new Date(dateStr).toLocaleDateString('zh-CN', {
             year: 'numeric',
             month: 'long',
@@ -27,7 +27,9 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
         });
     };
 
-    const dateDisplay = formatDate(album.shootDate)
+    const dateDisplay = album.shootDate && album.endDate && album.shootDate !== album.endDate
+        ? `${formatDate(album.shootDate)} - ${formatDate(album.endDate)}`
+        : formatDate(album.shootDate);
 
     return (
         <Link href={`/albums/${album.id}`} className="block group">
@@ -69,14 +71,16 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
                 </CardHeader>
                 <CardFooter className="pt-0">
                     <div className="w-full flex items-center justify-between text-sm text-gray-500">
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            <span>{album.location || '未知地点'}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{album.location || '未知地点'}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span className="truncate max-w-[120px]">{dateDisplay}</span>
-                        </div>
+                        {dateDisplay && (
+                            <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                                <Calendar className="w-4 h-4" />
+                                <span>{dateDisplay}</span>
+                            </div>
+                        )}
                     </div>
                 </CardFooter>
             </Card>
