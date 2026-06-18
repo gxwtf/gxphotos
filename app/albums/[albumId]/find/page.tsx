@@ -21,6 +21,7 @@ export default function FindYourselfPage() {
   const router = useRouter();
   const albumId = params.albumId as string;
 
+  const [albumTitle, setAlbumTitle] = useState('');
   const [query, setQuery] = useState('');
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,6 +75,22 @@ export default function FindYourselfPage() {
     setPhotos([]);
     setSearched(false);
     setNotFound(false);
+  }, [albumId]);
+
+  useEffect(() => {
+    const fetchAlbumInfo = async () => {
+      try {
+        const res = await fetch(`/api/albums/${albumId}`);
+        if (res.ok) {
+          const info = await res.json();
+          setAlbumTitle(info.title);
+          document.title = `找自己 - ${info.title} - 广学相册`;
+        }
+      } catch {
+        // ignore
+      }
+    };
+    if (albumId) fetchAlbumInfo();
   }, [albumId]);
 
   // 自动关闭 toast

@@ -27,6 +27,10 @@ export default function AlbumsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
+    document.title = '相册列表 - 广学相册';
+  }, []);
+
+  useEffect(() => {
     const fetchAlbums = async () => {
       try {
         const response = await fetch('/api/albums');

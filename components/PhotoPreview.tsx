@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Carousel,
@@ -34,6 +34,13 @@ export default function PhotoPreview({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [thumbApi, setThumbApi] = useState<CarouselApi>();
   const [mounted, setMounted] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [photoInfo, setPhotoInfo] = useState<{
+    name: string;
+    size: string;
+    captureTime: string | null;
+    camera: string | null;
+  } | null>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
   const currentIndexRef = useRef(currentIndex);
   const photosLengthRef = useRef(photos.length);
@@ -47,7 +54,44 @@ export default function PhotoPreview({
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
+    setInfoOpen(false);
+    setPhotoInfo(null);
   }, [initialIndex]);
+
+  useEffect(() => {
+    if (!infoOpen) return;
+
+    const photo = photos[currentIndex];
+    if (!photo) return;
+
+    setPhotoInfo(null);
+
+    const parts = photo.path.split('/');
+    const filename = parts[parts.length - 1];
+    const albumId = parts[parts.length - 2];
+
+    let cancelled = false;
+
+    const fetchInfo = async () => {
+      try {
+        const res = await fetch(
+          `/api/albums/${albumId}/photos/${encodeURIComponent(filename)}/info`
+        );
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setPhotoInfo(data);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchInfo();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentIndex, infoOpen, photos]);
 
   useEffect(() => {
     if (isOpen) {
@@ -125,6 +169,10 @@ export default function PhotoPreview({
     setCurrentIndex((prev) => Math.min(photos.length - 1, prev + 1));
   }, [photos.length]);
 
+  const handleInfoClick = useCallback(() => {
+    setInfoOpen((prev) => !prev);
+  }, []);
+
   if (!isOpen || !mounted) return null;
 
   const currentPhoto = photos[currentIndex];
@@ -142,6 +190,15 @@ export default function PhotoPreview({
           {currentIndex + 1} / {photos.length}
         </span>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleInfoClick}
+            className="text-white hover:bg-white/20 rounded-full"
+            title="照片信息"
+          >
+            <Info className="size-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -239,6 +296,31 @@ export default function PhotoPreview({
           </CarouselContent>
         </Carousel>
       </div>
+
+      {infoOpen && (
+        <div className="absolute top-16 right-4 z-10 w-72 bg-black/85 backdrop-blur-sm border border-white/20 rounded-lg p-4 text-white text-sm shadow-xl">
+          <div className="space-y-3">
+            <div>
+              <div className="text-white/50 text-xs mb-1">文件名称</div>
+              <div className="truncate" title={photoInfo?.name || currentPhoto?.name}>
+                {photoInfo?.name || currentPhoto?.name}
+              </div>
+            </div>
+            <div>
+              <div className="text-white/50 text-xs mb-1">文件大小</div>
+              <div>{photoInfo?.size || '加载中...'}</div>
+            </div>
+            <div>
+              <div className="text-white/50 text-xs mb-1">拍摄时间</div>
+              <div>{photoInfo?.captureTime || (photoInfo ? '无' : '加载中...')}</div>
+            </div>
+            <div>
+              <div className="text-white/50 text-xs mb-1">拍摄相机</div>
+              <div>{photoInfo?.camera || (photoInfo ? '无' : '加载中...')}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );
