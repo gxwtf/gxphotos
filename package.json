@@ -16,6 +16,7 @@
     "@base-ui/react": "^1.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-react": "^8.6.0",
     "exif-parser": "^0.1.12",
     "lg-fullscreen": "^1.2.1",
     "lg-thumbnail": "^1.2.1",

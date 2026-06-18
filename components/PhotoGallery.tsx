@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PhotoPreview from "@/components/PhotoPreview";
 
 interface Photo {
   name: string;
@@ -34,6 +35,8 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [groupedPhotos, setGroupedPhotos] = useState<GroupedPhotos>({});
   const [dates, setDates] = useState<string[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     const grouped: GroupedPhotos = { all: [] };
@@ -164,12 +167,13 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
           }
 
           return (
-            <a
+            <button
               key={photo.path}
-              href={photo.path}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-lg"
+              onClick={() => {
+                setPreviewIndex(sortedPhotos.indexOf(photo));
+                setPreviewOpen(true);
+              }}
+              className="group relative overflow-hidden rounded-lg w-full cursor-pointer"
             >
               <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
                 <Image
@@ -181,10 +185,17 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
-            </a>
+            </button>
           );
         })}
       </div>
+
+      <PhotoPreview
+        photos={sortedPhotos}
+        initialIndex={previewIndex}
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
     </div>
   );
 }
