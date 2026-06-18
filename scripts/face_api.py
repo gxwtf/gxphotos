@@ -161,7 +161,7 @@ async def search(request: SearchRequest):
         # 查找匹配的学生
         matched_students = []
         for student in student_index:
-            if query == student["student_id"] or query in student["student_name"]:
+            if query == student["student_id"] or query == student["student_name"]:
                 matched_students.append(student)
         
         if not matched_students:

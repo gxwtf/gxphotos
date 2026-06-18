@@ -181,7 +181,7 @@ def search_in_album(album_name: str, query: str):
 
     matched_students = []
     for student in student_index:
-        if query == student["student_id"] or query in student["student_name"]:
+        if query == student["student_id"] or query == student["student_name"]:
             matched_students.append(student)
     
     if not matched_students:
@@ -232,7 +232,7 @@ def api_search_in_album(album_name: str, query: str):
     
     matched_students = []
     for student in student_index:
-        if query == student["student_id"] or query in student["student_name"]:
+        if query == student["student_id"] or query == student["student_name"]:
             matched_students.append(student)
     
     if not matched_students:
