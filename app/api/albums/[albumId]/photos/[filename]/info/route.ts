@@ -11,6 +11,19 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatExifDate(value: unknown): string | null {
+  if (typeof value === 'number') {
+    const d = new Date(value * 1000);
+    if (isNaN(d.getTime())) return null;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return null;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ albumId: string; filename: string }> }
@@ -29,6 +42,7 @@ export async function GET(
 
     let captureTime: string | null = null;
     let camera: string | null = null;
+    let dimensions: string | null = null;
 
     try {
       const buffer = readFileSync(filePath);
@@ -36,9 +50,9 @@ export async function GET(
       const result = parser.parse();
 
       if (result.tags?.DateTimeOriginal) {
-        captureTime = result.tags.DateTimeOriginal as string;
+        captureTime = formatExifDate(result.tags.DateTimeOriginal);
       } else if (result.tags?.DateTime) {
-        captureTime = result.tags.DateTime as string;
+        captureTime = formatExifDate(result.tags.DateTime);
       }
 
       const make = result.tags?.Make as string | undefined;
@@ -50,6 +64,19 @@ export async function GET(
       } else if (make) {
         camera = make;
       }
+
+      const tags = result.tags;
+      // @ts-expect-error imageSize is built-in but not typed
+      const imageSize = result.imageSize as { width: number; height: number } | undefined;
+      const width =
+        tags?.ExifImageWidth ??
+        imageSize?.width;
+      const height =
+        tags?.ExifImageHeight ??
+        imageSize?.height;
+      if (width && height) {
+        dimensions = `${width} × ${height}`;
+      }
     } catch {
       // EXIF parsing failed, leave fields null
     }
@@ -57,6 +84,7 @@ export async function GET(
     return NextResponse.json({
       name: filename,
       size: fileSizeFormatted,
+      dimensions,
       captureTime,
       camera,
     });

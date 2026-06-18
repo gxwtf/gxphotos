@@ -11,19 +11,23 @@ function getExifDate(filePath: string): string | null {
     const parser = ExifParser.create(buffer);
     const result = parser.parse();
 
-    if (result.tags?.DateTimeOriginal) {
-      const dateStr = result.tags.DateTimeOriginal as string;
-      const [date] = dateStr.split(' ');
-      const [year, month, day] = date.split(':');
-      return `${year}-${month}-${day}`;
-    }
+    const parseDate = (value: unknown): string | null => {
+      if (typeof value === 'number') {
+        const d = new Date(value * 1000);
+        if (isNaN(d.getTime())) return null;
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      }
+      if (typeof value === 'string') {
+        const [date] = value.split(' ');
+        const [year, month, day] = date.split(':');
+        return `${year}-${month}-${day}`;
+      }
+      return null;
+    };
 
-    if (result.tags?.DateTime) {
-      const dateStr = result.tags.DateTime as string;
-      const [date] = dateStr.split(' ');
-      const [year, month, day] = date.split(':');
-      return `${year}-${month}-${day}`;
-    }
+    const date = parseDate(result.tags?.DateTimeOriginal) || parseDate(result.tags?.DateTime);
+    if (date) return date;
   } catch {
     // silently fail
   }

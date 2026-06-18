@@ -38,6 +38,7 @@ export default function PhotoPreview({
   const [photoInfo, setPhotoInfo] = useState<{
     name: string;
     size: string;
+    dimensions: string | null;
     captureTime: string | null;
     camera: string | null;
   } | null>(null);
@@ -309,6 +310,10 @@ export default function PhotoPreview({
             <div>
               <div className="text-white/50 text-xs mb-1">文件大小</div>
               <div>{photoInfo?.size || '加载中...'}</div>
+            </div>
+            <div>
+              <div className="text-white/50 text-xs mb-1">照片尺寸</div>
+              <div>{photoInfo?.dimensions || (photoInfo ? '无' : '加载中...')}</div>
             </div>
             <div>
               <div className="text-white/50 text-xs mb-1">拍摄时间</div>
