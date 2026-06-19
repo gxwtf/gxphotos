@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { CalendarArrowDown, CalendarArrowUp } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -10,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import PhotoPreview from "@/components/PhotoPreview";
 
 interface Photo {
@@ -95,26 +97,29 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
 
   return (
     <div>
-      {dates.length > 0 && (
+      {photos.length > 0 && (
         <div className="mb-6">
           <div className="flex items-start justify-between gap-4">
-            <Tabs value={selectedDate} onValueChange={setSelectedDate} className="flex-1">
-              <TabsList variant="line" className="flex flex-wrap justify-start border-b-primary">
-                {dates.map(date => (
-                  <TabsTrigger
-                    key={date}
-                    value={date}
-                    className="flex-shrink-0 data-[state=active]:text-primary data-[state=active]:border-b-primary"
-                  >
-                    {formatDate(date)} {date !== 'all' && `(${groupedPhotos[date]?.length || 0})`}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            {dates.length > 0 && (
+              <Tabs value={selectedDate} onValueChange={setSelectedDate} className="flex-1">
+                <TabsList variant="line" className="flex flex-wrap justify-start border-b-primary">
+                  {dates.map(date => (
+                    <TabsTrigger
+                      key={date}
+                      value={date}
+                      className="flex-shrink-0 data-[state=active]:text-primary data-[state=active]:border-b-primary"
+                    >
+                      {formatDate(date)} {date !== 'all' && <span className="hidden md:inline">({groupedPhotos[date]?.length || 0})</span>}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
 
             <div className="flex-shrink-0">
+              {/* Desktop: Select dropdown */}
               <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
-                <SelectTrigger className="w-36">
+                <SelectTrigger className="w-36 hidden md:flex">
                   <SelectValue placeholder="排序">
                     {sortOrder === 'desc' ? '从晚到早' : '从早到晚'}
                   </SelectValue>
@@ -124,6 +129,16 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                   <SelectItem value="asc">从早到晚</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Mobile: Icon toggle */}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                className="md:hidden"
+                title={sortOrder === 'desc' ? '从晚到早' : '从早到晚'}
+              >
+                {sortOrder === 'desc' ? <CalendarArrowDown className="size-5" /> : <CalendarArrowUp className="size-5" />}
+              </Button>
             </div>
           </div>
         </div>
