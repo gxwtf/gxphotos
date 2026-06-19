@@ -67,7 +67,7 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
                 </div>
                 <CardHeader>
                     <CardTitle className="line-clamp-2">{album.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{album.description}</CardDescription>
+                    <CardDescription className="line-clamp-1 min-h-[1.25em]">{album.description || '\u00A0'}</CardDescription>
                 </CardHeader>
                 <CardFooter className="pt-0">
                     <div className="w-full flex items-center justify-between text-sm text-gray-500">
