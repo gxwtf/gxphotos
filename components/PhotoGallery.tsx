@@ -116,7 +116,7 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               </Tabs>
             )}
 
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 ml-auto">
               {/* Desktop: Select dropdown */}
               <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
                 <SelectTrigger className="w-36 hidden md:flex">
