@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,21 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", "font-sans")}
     >
       <body className="min-h-full flex flex-col">{children}</body>
+      <Script
+        id="baidu-analytics"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            var _hmt = _hmt || [];
+            (function() {
+              var hm = document.createElement("script");
+              hm.src = "https://hm.baidu.com/hm.js?5bb4cf6dbf4b33132629fd891d818dec";
+              var s = document.getElementsByTagName("script")[0];
+              s.parentNode.insertBefore(hm, s);
+            })();
+          `,
+        }}
+      />
     </html>
   );
 }
