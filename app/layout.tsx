@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +18,7 @@ export default function RootLayout({
       className={cn("h-full", "antialiased", "font-sans")}
     >
       <head>
-        <Script
-          id="baidu-analytics"
-          strategy="afterInteractive"
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               var _hmt = _hmt || [];
