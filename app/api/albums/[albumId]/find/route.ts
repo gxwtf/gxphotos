@@ -16,7 +16,7 @@ function getExifDate(filePath: string): string | null {
         const d = new Date(value * 1000);
         if (isNaN(d.getTime())) return null;
         const pad = (n: number) => String(n).padStart(2, '0');
-        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
       }
       if (typeof value === 'string') {
         const [date] = value.split(' ');
