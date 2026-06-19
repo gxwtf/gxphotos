@@ -3,19 +3,31 @@ import { join } from 'path';
 import { NextResponse } from 'next/server';
 
 const INFO_DIR = join(process.cwd(), 'public/info');
+const COUNTER_API = 'https://counter.jerryz.com.cn/api/counter';
 
-function getViewCount(albumId: string): number {
-  const viewCountPath = join(INFO_DIR, albumId, 'views.txt');
-  if (existsSync(viewCountPath)) {
-    try {
-      const count = readFileSync(viewCountPath, 'utf-8').trim();
-      return parseInt(count, 10) || 0;
-    } catch {
-      return 0;
-    }
+async function getViewCount(albumId: string): Promise<number> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(COUNTER_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: albumId }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) return 0;
+
+    const svgText = await response.text();
+    const match = svgText.match(/<text[^>]*>(\d+)<\/text>/);
+    return match ? parseInt(match[1], 10) : 0;
+  } catch {
+    console.error(`Failed to fetch view count for album: ${albumId}`);
+    return 0;
   }
-  // 返回一个随机模拟浏览次数（用于演示）
-  return Math.floor(Math.random() * 50000) + 1000;
 }
 
 export async function GET(
@@ -36,7 +48,7 @@ export async function GET(
     const rawData = readFileSync(infoPath, 'utf-8');
     const info = JSON.parse(rawData);
     
-    const viewCount = getViewCount(albumId);
+    const viewCount = await getViewCount(albumId);
 
     return NextResponse.json({
       id: albumId,
