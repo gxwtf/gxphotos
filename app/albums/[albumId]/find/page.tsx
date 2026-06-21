@@ -84,7 +84,6 @@ export default function FindYourselfPage() {
         if (res.ok) {
           const info = await res.json();
           setAlbumTitle(info.title);
-          document.title = `找自己 - ${info.title} - 广学相册`;
         }
       } catch {
         // ignore

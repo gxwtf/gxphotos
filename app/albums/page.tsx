@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import AlbumCard from '@/components/AlbumCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -25,10 +25,6 @@ export default function AlbumsPage() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  useEffect(() => {
-    document.title = '相册列表 - 广学相册';
-  }, []);
 
   useEffect(() => {
     const fetchAlbums = async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
 import { Button } from '@/components/ui/button';
@@ -68,12 +68,6 @@ export default function AlbumDetailPage() {
 
     if (albumId) fetchData();
   }, [albumId]);
-
-  useEffect(() => {
-    if (albumInfo) {
-      document.title = `${albumInfo.title} - 广学相册`;
-    }
-  }, [albumInfo]);
 
   // 自动关闭 toast
   useEffect(() => {

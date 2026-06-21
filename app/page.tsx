@@ -7,7 +7,6 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    document.title = '广学相册';
     // 自动重定向到相册页面
     router.push('/albums');
   }, [router]);
