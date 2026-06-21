@@ -60,7 +60,7 @@ export default function AlbumsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
             <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
-            广学照片直播
+            广学相册
           </h1>
           <p className="text-gray-500 text-lg">记录每一个精彩瞬间</p>
         </div>

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import GitHubLink from '@/components/GitHubLink';
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "广学相册",
-  description: "游学照片直播相册",
+  description: "记录每一个精彩瞬间",
 };
 
 export default function RootLayout({
@@ -32,7 +33,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <GitHubLink />
+        {children}
+      </body>
     </html>
   );
 }
