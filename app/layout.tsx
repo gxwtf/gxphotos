@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import GitHubLink from '@/components/GitHubLink';
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -34,7 +33,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <GitHubLink />
         {children}
       </body>
     </html>
