@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import Image from 'next/image';
 import { X, Download, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThumbImage from '@/components/ThumbImage';
 import {
   Carousel,
   CarouselContent,
@@ -150,6 +150,7 @@ export default function PhotoPreview({
     const photo = photos[currentIndex];
     if (!photo) return;
 
+    // 原图由 nginx 直接提供，下载拿到的就是原始文件
     const res = await fetch(photo.path);
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
@@ -221,7 +222,7 @@ export default function PhotoPreview({
         </div>
       </div>
 
-      {/* Main image area */}
+      {/* Main image area —— 大图看的就是原图（由 nginx 提供） */}
       <div className="flex-1 flex items-center justify-center min-h-0 px-4">
         <Button
           variant="ghost"
@@ -235,14 +236,12 @@ export default function PhotoPreview({
 
         <div className="relative w-full h-full max-w-5xl max-h-[75vh]">
           {currentPhoto && (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element -- 这里要的就是原图，不经优化器
+            <img
               src={currentPhoto.path}
               alt={currentPhoto.name}
-              fill
-              className="object-contain"
-              sizes="(max-width: 1024px) 100vw, 80vw"
-              priority
-              unoptimized
+              className="h-full w-full object-contain"
+              decoding="async"
             />
           )}
         </div>
@@ -258,7 +257,7 @@ export default function PhotoPreview({
         </Button>
       </div>
 
-      {/* Thumbnail carousel */}
+      {/* Thumbnail carousel —— 用缩略图，点开才加载原图 */}
       <div ref={thumbRef} className="shrink-0 py-4 px-16">
         <Carousel
           setApi={setThumbApi}
@@ -284,12 +283,10 @@ export default function PhotoPreview({
                       : 'opacity-50 hover:opacity-80'
                   }`}
                 >
-                  <Image
+                  <ThumbImage
                     src={photo.path}
                     alt={photo.name}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 14vw, 10vw"
+                    className="h-full w-full object-cover"
                   />
                 </button>
               </CarouselItem>

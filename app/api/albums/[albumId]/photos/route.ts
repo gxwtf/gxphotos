@@ -2,8 +2,8 @@ import { readdirSync, existsSync, statSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
 import ExifParser from 'exif-parser';
-
-const PHOTOS_DIR = join(process.cwd(), 'public/photos');
+import { isImageFile, PHOTOS_DIR } from '@/lib/paths';
+import { toOriginalUrl } from '@/lib/photo-url';
 
 interface Photo {
   name: string;
@@ -63,26 +63,23 @@ export async function GET(
     }
 
     const photos: Photo[] = [];
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
     // 只遍历当前目录中的照片（不递归扫描子目录）
     const items = readdirSync(albumPath);
-    
+
     for (const item of items) {
       const itemPath = join(albumPath, item);
       const stat = statSync(itemPath);
-      
-      if (!stat.isDirectory()) {
-        const ext = '.' + item.split('.').pop()?.toLowerCase();
-        if (imageExtensions.includes(ext)) {
-          const shotDate = getExifDate(itemPath) || getFileDate(itemPath);
-          
-          photos.push({
-            name: item,
-            path: itemPath.replace(join(process.cwd(), 'public'), ''),
-            shotDate,
-          });
-        }
+
+      if (!stat.isDirectory() && isImageFile(item)) {
+        const shotDate = getExifDate(itemPath) || getFileDate(itemPath);
+
+        photos.push({
+          name: item,
+          // URL 与物理位置解耦：原图由 nginx 从 PHOTOS_DIR 托管
+          path: toOriginalUrl(albumId, item),
+          shotDate,
+        });
       }
     }
 

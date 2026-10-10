@@ -2,8 +2,7 @@ import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
 import ExifParser from 'exif-parser';
-
-const PHOTOS_DIR = join(process.cwd(), 'public/photos');
+import { PHOTOS_DIR } from '@/lib/paths';
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

@@ -1,9 +1,7 @@
 import { readdirSync, readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
-
-const PHOTOS_DIR = join(process.cwd(), 'public/photos');
-const INFO_DIR = join(process.cwd(), 'public/info');
+import { INFO_DIR, PHOTOS_DIR } from '@/lib/paths';
 
 export async function GET() {
   try {

@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import ExifParser from 'exif-parser';
-
-const PHOTOS_DIR = join(process.cwd(), 'public/photos');
+import { PHOTOS_DIR } from '@/lib/paths';
+import { toOriginalUrl } from '@/lib/photo-url';
 
 function getExifDate(filePath: string): string | null {
   try {
@@ -80,10 +80,10 @@ export async function POST(
 
     const data = await response.json();
     
-    // 转换为 Photo 对象格式，路径为 /photos/{albumId}/{filename}
+    // 转换为 Photo 对象格式，路径为 /photos/{albumId}/{filename}（由 nginx 提供原图）
     const photos = data.photos.map((name: string) => ({
       name: name,
-      path: `/photos/${albumId}/${name}`,
+      path: toOriginalUrl(albumId, name),
       shotDate: getPhotoDate(albumId, name),
     }));
 

@@ -51,3 +51,9 @@ public/students
 
 # face indexes
 face_indexes
+
+# 缩略图构建产物（scripts/generate-thumbnails.mjs 生成）
+public/thumbs
+
+# 开发期原图目录（项目根下、public 之外；生产用 PHOTOS_DIR 指向项目外）
+/photos_data/

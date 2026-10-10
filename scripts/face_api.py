@@ -31,8 +31,20 @@ logger = logging.getLogger(__name__)
 
 # ========== 配置 ==========
 BASE_DIR = Path(__file__).parent.parent.resolve()
-PHOTOS_DIR = BASE_DIR / "public" / "photos"          # 相册照片目录
-STUDENT_DIR = BASE_DIR / "public" / "students"       # 学生大头照目录
+
+
+def _resolve_dir(env_value, fallback):
+    """环境变量目录：空则用默认值；相对路径按项目根解析（与 lib/paths.ts 语义一致）。"""
+    value = (env_value or "").strip()
+    if not value:
+        return fallback
+    path = Path(value).expanduser()
+    return path if path.is_absolute() else (BASE_DIR / path)
+
+
+# 原图已移出仓库，由 nginx 托管，根目录经环境变量 PHOTOS_DIR 注入（与 face_matcher.py 同一语义）
+PHOTOS_DIR = _resolve_dir(os.getenv("PHOTOS_DIR"), BASE_DIR / "photos_data")  # 相册照片目录
+STUDENT_DIR = _resolve_dir(os.getenv("STUDENT_DIR"), BASE_DIR / "public" / "students")  # 学生大头照目录
 INDEX_DIR = BASE_DIR / "face_indexes"                # 索引缓存目录
 
 # InsightFace 参数

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { CalendarArrowDown, CalendarArrowUp } from 'lucide-react';
 import {
   Select,
@@ -13,6 +12,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import PhotoPreview from "@/components/PhotoPreview";
+import ThumbImage from "@/components/ThumbImage";
 
 interface Photo {
   name: string;
@@ -156,12 +156,10 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                 className="relative overflow-hidden rounded-lg cursor-pointer select-none"
               >
                 <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                  <Image
+                  <ThumbImage
                     src={photo.path}
                     alt={photo.name}
-                    fill
-                    sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                    className="object-cover"
+                    className="h-full w-full object-cover"
                   />
                 </div>
                 <div
@@ -191,12 +189,10 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               className="group relative overflow-hidden rounded-lg w-full cursor-pointer"
             >
               <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
-                <Image
+                <ThumbImage
                   src={photo.path}
                   alt={photo.name}
-                  fill
-                  sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                  className="object-cover"
+                  className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </div>
