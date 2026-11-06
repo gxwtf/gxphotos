@@ -5,7 +5,10 @@ import { PHOTOS_DIR } from '@/lib/paths';
 import { getPhotoTimestamps, type PhotoTimestamps } from '@/lib/photo-meta';
 import { toOriginalUrl } from '@/lib/photo-url';
 
-function getPhotoTimestampsSafe(albumId: string, filename: string): PhotoTimestamps {
+async function getPhotoTimestampsSafe(
+  albumId: string,
+  filename: string
+): Promise<PhotoTimestamps> {
   const filePath = join(PHOTOS_DIR, albumId, filename);
   if (!existsSync(filePath)) {
     const now = Date.now();
@@ -49,11 +52,13 @@ export async function POST(
     const data = await response.json();
     
     // 转换为 Photo 对象格式，路径为 /photos/{albumId}/{filename}（由 nginx 提供原图）
-    const photos = data.photos.map((name: string) => ({
-      name: name,
-      path: toOriginalUrl(albumId, name),
-      ...getPhotoTimestampsSafe(albumId, name),
-    }));
+    const photos = await Promise.all(
+      data.photos.map(async (name: string) => ({
+        name: name,
+        path: toOriginalUrl(albumId, name),
+        ...(await getPhotoTimestampsSafe(albumId, name)),
+      }))
+    );
 
     return NextResponse.json({ photos });
   } catch (error) {

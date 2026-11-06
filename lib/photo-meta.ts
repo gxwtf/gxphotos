@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'fs';
+import { promises as fs, statSync } from 'fs';
 import ExifParser from 'exif-parser';
 
 /**
@@ -62,9 +62,10 @@ function toWallClockEpochMs(ms: number): number {
   );
 }
 
-function readExifWallClockEpochMs(filePath: string): number | null {
+async function readExifWallClockEpochMs(filePath: string): Promise<number | null> {
   try {
-    const result = ExifParser.create(readFileSync(filePath)).parse();
+    const buffer = await fs.readFile(filePath);
+    const result = ExifParser.create(buffer).parse();
     return (
       parseWallClockEpochMs(result.tags?.DateTimeOriginal) ??
       parseWallClockEpochMs(result.tags?.DateTime)
@@ -76,17 +77,65 @@ function readExifWallClockEpochMs(filePath: string): number | null {
 }
 
 /**
- * 读取一张照片的拍摄时间（墙上时间口径）。
+ * 进程内时间缓存：key = 绝对路径，value 附带 size + mtimeMs 作为失效判据。
  *
- * ⚠️ 会整份读入文件（EXIF 在文件头，但 exif-parser 需要 Buffer）。逐张调用时请保持
- * 一次请求内的调用次数可控——目前 photos / find 两个接口都是每张照片各读一次。
+ * 为什么需要：取 EXIF 得把**整份原图**读进内存（exif-parser 只吃完整 Buffer），
+ * 大相册一次请求就是几百张到几千张、几个 GB 的读盘 —— 新疆和田（1034 张）冷启动
+ * 5 秒、河西走廊（4033 张）2.5 秒，全是重复劳动：照片不变，EXIF 也不变。
+ * 用 size + mtime 做校验后，照片被替换/重新拷贝会自动失效重算。
  */
-export function getPhotoTimestamps(filePath: string): PhotoTimestamps {
-  const wallClock =
-    readExifWallClockEpochMs(filePath) ?? toWallClockEpochMs(statSync(filePath).mtime.getTime());
+interface CacheEntry {
+  size: number;
+  mtimeMs: number;
+  shotDate: string;
+  shotTime: number;
+}
 
-  return {
+const CACHE_MAX_ENTRIES = 50_000;
+const cache = new Map<string, CacheEntry>();
+
+function rememberEntry(filePath: string, entry: CacheEntry): void {
+  cache.set(filePath, entry);
+
+  // Map 保留插入顺序：超限时从最久未写入的条目开始淘汰（近似 FIFO，足够用）
+  if (cache.size > CACHE_MAX_ENTRIES) {
+    const overflow = cache.size - CACHE_MAX_ENTRIES;
+    let removed = 0;
+    for (const key of cache.keys()) {
+      cache.delete(key);
+      if (++removed >= overflow) break;
+    }
+  }
+}
+
+/** 清空缓存（调试用；生产无调用方） */
+export function clearPhotoTimestampCache(): void {
+  cache.clear();
+}
+
+/**
+ * 读取一张照片的拍摄时间（墙上时间口径），带进程内缓存。
+ *
+ * 读取是异步的：photos 接口会对整张相册并发调度（见 CONCURRENCY），
+ * 同步 readFileSync 会把并发退化成串行。
+ */
+export async function getPhotoTimestamps(filePath: string): Promise<PhotoTimestamps> {
+  const stat = statSync(filePath);
+  const cached = cache.get(filePath);
+  if (cached && cached.size === stat.size && cached.mtimeMs === stat.mtimeMs) {
+    return { shotDate: cached.shotDate, shotTime: cached.shotTime };
+  }
+
+  const wallClock =
+    (await readExifWallClockEpochMs(filePath)) ?? toWallClockEpochMs(stat.mtime.getTime());
+
+  const entry: CacheEntry = {
+    size: stat.size,
+    mtimeMs: stat.mtimeMs,
     shotDate: new Date(wallClock).toISOString().slice(0, 10),
     shotTime: wallClock,
   };
+  rememberEntry(filePath, entry);
+
+  return { shotDate: entry.shotDate, shotTime: entry.shotTime };
 }

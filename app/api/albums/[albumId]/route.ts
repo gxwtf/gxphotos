@@ -1,34 +1,9 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
+import { getViewCount } from '@/lib/counter';
 
 const INFO_DIR = join(process.cwd(), 'public/info');
-const COUNTER_API = 'https://counter.jerryz.com.cn/api/counter';
-
-async function getViewCount(albumId: string): Promise<number> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(COUNTER_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: albumId }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) return 0;
-
-    const svgText = await response.text();
-    const match = svgText.match(/<text[^>]*>(\d+)<\/text>/);
-    return match ? parseInt(match[1], 10) : 0;
-  } catch {
-    console.error(`Failed to fetch view count for album: ${albumId}`);
-    return 0;
-  }
-}
 
 export async function GET(
   _request: Request,
