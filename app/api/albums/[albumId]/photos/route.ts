@@ -1,50 +1,15 @@
-import { readdirSync, existsSync, statSync, readFileSync } from 'fs';
+import { readdirSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { NextResponse } from 'next/server';
-import ExifParser from 'exif-parser';
 import { isImageFile, PHOTOS_DIR } from '@/lib/paths';
+import { getPhotoTimestamps } from '@/lib/photo-meta';
 import { toOriginalUrl } from '@/lib/photo-url';
 
 interface Photo {
   name: string;
   path: string;
-  shotDate?: string; // ISO date string (YYYY-MM-DD)
-}
-
-function getExifDate(filePath: string): string | null {
-  try {
-    const buffer = readFileSync(filePath);
-    const parser = ExifParser.create(buffer);
-    const result = parser.parse();
-
-    const parseDate = (value: unknown): string | null => {
-      if (typeof value === 'number') {
-        const d = new Date(value * 1000);
-        if (isNaN(d.getTime())) return null;
-        const pad = (n: number) => String(n).padStart(2, '0');
-        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-      }
-      if (typeof value === 'string') {
-        const [date] = value.split(' ');
-        const [year, month, day] = date.split(':');
-        return `${year}-${month}-${day}`;
-      }
-      return null;
-    };
-
-    const date = parseDate(result.tags?.DateTimeOriginal) || parseDate(result.tags?.DateTime);
-    if (date) return date;
-  } catch (error) {
-    // Silently fail if EXIF parsing fails
-  }
-  
-  return null;
-}
-
-function getFileDate(filePath: string): string {
-  const stat = statSync(filePath);
-  const mtime = stat.mtime;
-  return mtime.toISOString().split('T')[0];
+  shotDate?: string; // ISO date string (YYYY-MM-DD)，按天分组用
+  shotTime?: number; // 拍摄时间的墙上时间 epoch 毫秒，精确排序用
 }
 
 export async function GET(
@@ -72,13 +37,14 @@ export async function GET(
       const stat = statSync(itemPath);
 
       if (!stat.isDirectory() && isImageFile(item)) {
-        const shotDate = getExifDate(itemPath) || getFileDate(itemPath);
+        const { shotDate, shotTime } = getPhotoTimestamps(itemPath);
 
         photos.push({
           name: item,
           // URL 与物理位置解耦：原图由 nginx 从 PHOTOS_DIR 托管
           path: toOriginalUrl(albumId, item),
           shotDate,
+          shotTime,
         });
       }
     }

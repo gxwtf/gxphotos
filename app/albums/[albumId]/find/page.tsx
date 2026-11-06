@@ -14,6 +14,7 @@ interface Photo {
   name: string;
   path: string;
   shotDate?: string;
+  shotTime?: number;
 }
 
 export default function FindYourselfPage() {

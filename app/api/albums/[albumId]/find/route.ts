@@ -1,49 +1,17 @@
 import { NextResponse } from 'next/server';
-import { readFileSync, existsSync, statSync } from 'fs';
+import { existsSync } from 'fs';
 import { join } from 'path';
-import ExifParser from 'exif-parser';
 import { PHOTOS_DIR } from '@/lib/paths';
+import { getPhotoTimestamps, type PhotoTimestamps } from '@/lib/photo-meta';
 import { toOriginalUrl } from '@/lib/photo-url';
 
-function getExifDate(filePath: string): string | null {
-  try {
-    const buffer = readFileSync(filePath);
-    const parser = ExifParser.create(buffer);
-    const result = parser.parse();
-
-    const parseDate = (value: unknown): string | null => {
-      if (typeof value === 'number') {
-        const d = new Date(value * 1000);
-        if (isNaN(d.getTime())) return null;
-        const pad = (n: number) => String(n).padStart(2, '0');
-        return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-      }
-      if (typeof value === 'string') {
-        const [date] = value.split(' ');
-        const [year, month, day] = date.split(':');
-        return `${year}-${month}-${day}`;
-      }
-      return null;
-    };
-
-    const date = parseDate(result.tags?.DateTimeOriginal) || parseDate(result.tags?.DateTime);
-    if (date) return date;
-  } catch {
-    // silently fail
-  }
-
-  return null;
-}
-
-function getFileDate(filePath: string): string {
-  const stat = statSync(filePath);
-  return stat.mtime.toISOString().split('T')[0];
-}
-
-function getPhotoDate(albumId: string, filename: string): string {
+function getPhotoTimestampsSafe(albumId: string, filename: string): PhotoTimestamps {
   const filePath = join(PHOTOS_DIR, albumId, filename);
-  if (!existsSync(filePath)) return new Date().toISOString().split('T')[0];
-  return getExifDate(filePath) || getFileDate(filePath);
+  if (!existsSync(filePath)) {
+    const now = Date.now();
+    return { shotDate: new Date(now).toISOString().split('T')[0], shotTime: now };
+  }
+  return getPhotoTimestamps(filePath);
 }
 
 // 从环境变量读取人脸服务地址，默认值作为备选
@@ -84,7 +52,7 @@ export async function POST(
     const photos = data.photos.map((name: string) => ({
       name: name,
       path: toOriginalUrl(albumId, name),
-      shotDate: getPhotoDate(albumId, name),
+      ...getPhotoTimestampsSafe(albumId, name),
     }));
 
     return NextResponse.json({ photos });

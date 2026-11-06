@@ -18,6 +18,8 @@ interface Photo {
   name: string;
   path: string;
   shotDate?: string;
+  /** 拍摄时间的墙上时间 epoch 毫秒；缺失时退化为按文件名排序 */
+  shotTime?: number;
 }
 
 interface PhotoGalleryProps {
@@ -67,7 +69,21 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
 
   const currentPhotos = groupedPhotos[selectedDate] || [];
 
+  /**
+   * 排序以**拍摄时间**（shotTime）为准，文件名只在时间相同/缺失时兜底。
+   *
+   * 不能只按文件名排：相机文件名计数器会回绕（如 BLYX9999 → BLYX0001，颐和园那场
+   * 12:29 回绕），多机位拼在一起更是完全无序 —— 那时「从晚到早」会把中午的放最前、
+   * 真正的最后一小时排到最后。
+   */
   const sortedPhotos = [...currentPhotos].sort((a, b) => {
+    const timeA = a.shotTime;
+    const timeB = b.shotTime;
+
+    if (typeof timeA === 'number' && typeof timeB === 'number' && timeA !== timeB) {
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+    }
+
     const nameA = a.name.toLowerCase();
     const nameB = b.name.toLowerCase();
     return sortOrder === 'desc' ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
