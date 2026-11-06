@@ -70,7 +70,7 @@ export default function AlbumCard({ album, thumbnailUrl }: AlbumCardProps) {
                     <CardDescription className="line-clamp-1 min-h-[1.25em]">{album.description || '\u00A0'}</CardDescription>
                 </CardHeader>
                 <CardFooter className="pt-0">
-                    <div className="w-full flex items-center justify-between text-sm text-gray-500">
+                    <div className="w-full flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-2 min-w-0">
                             <MapPin className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate">{album.location || '未知地点'}</span>

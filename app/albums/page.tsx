@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AlbumCard from '@/components/AlbumCard';
+import ThemeToggle from '@/components/theme-toggle';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select,
@@ -50,20 +51,23 @@ export default function AlbumsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 头部 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
-            广学相册
-          </h1>
-          <p className="text-gray-500 text-lg">记录每一个精彩瞬间</p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+              <img src="/favicon.ico" alt="favicon" className="w-8 h-8" />
+              广学相册
+            </h1>
+            <p className="text-muted-foreground text-lg">记录每一个精彩瞬间</p>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* 排序控制 */}
         <div className="mb-6 flex items-center justify-between">
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             共 {albums.length} 个相册
           </p>
           <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
@@ -91,7 +95,7 @@ export default function AlbumsPage() {
           </div>
         ) : albums.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">还没有相册</p>
+            <p className="text-muted-foreground text-lg">还没有相册</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

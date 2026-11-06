@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
+import ThemeToggle from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -139,25 +140,28 @@ export default function FindYourselfPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* 返回按钮 */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/albums/${albumId}`)}
-          className="mb-8 flex items-center gap-2"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          返回相册
-        </Button>
+        {/* 返回按钮 + 外观切换 */}
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push(`/albums/${albumId}`)}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            返回相册
+          </Button>
+          <ThemeToggle />
+        </div>
 
         {/* 页面标题 */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-6">
             <User className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">找自己</h1>
-          <p className="text-gray-600 max-w-md mx-auto">
+          <h1 className="text-3xl font-bold text-foreground mb-4">找自己</h1>
+          <p className="text-muted-foreground max-w-md mx-auto">
             输入你的姓名或数字校园号，帮你在相册中找到你的所有照片
           </p>
         </div>
@@ -191,20 +195,20 @@ export default function FindYourselfPage() {
         {loading ? (
           <div className="text-center">
             <Spinner className="w-8 h-8 mx-auto mb-4" />
-            <p className="text-gray-500">正在搜索中...</p>
+            <p className="text-muted-foreground">正在搜索中...</p>
           </div>
         ) : searched && notFound ? (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full mb-4">
+              <Search className="w-8 h-8 text-muted-foreground/80" />
             </div>
-            <p className="text-gray-500 text-lg mb-2">未找到相关照片</p>
-            <p className="text-gray-400">请尝试使用不同的关键词搜索</p>
+            <p className="text-muted-foreground text-lg mb-2">未找到相关照片</p>
+            <p className="text-muted-foreground/80">请尝试使用不同的关键词搜索</p>
           </div>
         ) : searched && photos.length > 0 ? (
           <div>
             <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-              <h2 className="text-xl font-semibold text-gray-800 whitespace-nowrap">
+              <h2 className="text-xl font-semibold text-foreground whitespace-nowrap">
                 找到 {photos.length} 张包含你的照片
               </h2>
               {selectionMode ? (
@@ -262,11 +266,11 @@ export default function FindYourselfPage() {
           </div>
         ) : (
           <div className="text-center py-16">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-6">
-              <Search className="w-12 h-12 text-gray-300" />
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-muted rounded-full mb-6">
+              <Search className="w-12 h-12 text-muted-foreground/60" />
             </div>
-            <p className="text-gray-500 text-lg">开始搜索</p>
-            <p className="text-gray-400 mt-2">输入姓名或学号，找到你的照片</p>
+            <p className="text-muted-foreground text-lg">开始搜索</p>
+            <p className="text-muted-foreground/80 mt-2">输入姓名或学号，找到你的照片</p>
           </div>
         )}
       </div>

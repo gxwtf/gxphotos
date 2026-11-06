@@ -171,7 +171,7 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
                 onClick={() => toggleSelection(photo.path)}
                 className="relative overflow-hidden rounded-lg cursor-pointer select-none"
               >
-                <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+                <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-muted">
                   <ThumbImage
                     src={photo.path}
                     alt={photo.name}
@@ -204,7 +204,7 @@ export default function PhotoGallery({ photos, selectionMode = false, selectedPh
               }}
               className="group relative overflow-hidden rounded-lg w-full cursor-pointer"
             >
-              <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-gray-100">
+              <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-muted">
                 <ThumbImage
                   src={photo.path}
                   alt={photo.name}

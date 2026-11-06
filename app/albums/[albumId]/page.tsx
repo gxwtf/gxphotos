@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PhotoGallery from '@/components/PhotoGallery';
+import ThemeToggle from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -126,7 +127,7 @@ export default function AlbumDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <Skeleton className="w-32 h-10 mb-6" />
           <Skeleton className="w-full h-12 mb-4" />
@@ -143,9 +144,9 @@ export default function AlbumDetailPage() {
 
   if (!albumInfo) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 text-lg mb-4">相册不存在</p>
+          <p className="text-muted-foreground text-lg mb-4">相册不存在</p>
           <Button onClick={() => router.push('/albums')}>返回相册列表</Button>
         </div>
       </div>
@@ -153,17 +154,20 @@ export default function AlbumDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* 返回按钮 */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push('/albums')}
-          className="mb-6 flex items-center gap-2"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          返回首页
-        </Button>
+        {/* 返回按钮 + 外观切换 */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/albums')}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            返回首页
+          </Button>
+          <ThemeToggle />
+        </div>
 
         {/* 相册信息 */}
         <div className="mb-8 flex flex-col lg:flex-row gap-8 items-start">
@@ -180,10 +184,10 @@ export default function AlbumDetailPage() {
 
           {/* 右侧信息 */}
           <div className="flex-1 lg:w-2/3">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{albumInfo.title}</h1>
-            <p className="text-gray-700 text-lg mb-6">{albumInfo.description}</p>
+            <h1 className="text-4xl font-bold text-foreground mb-4">{albumInfo.title}</h1>
+            <p className="text-foreground/80 text-lg mb-6">{albumInfo.description}</p>
 
-            <div className="flex flex-wrap gap-4 text-gray-600 mb-6">
+            <div className="flex flex-wrap gap-4 text-muted-foreground mb-6">
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-primary" />
                 <span>{albumInfo.viewCount.toLocaleString()} 人次浏览</span>
@@ -193,7 +197,7 @@ export default function AlbumDetailPage() {
                 <span>{albumInfo.location}</span>
               </div>
               {albumInfo.shootDate && (
-                <div className="flex items-center gap-1.5 text-gray-600">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Calendar className="w-5 h-5 text-primary" />
                   <span>
                     {formatDate(albumInfo.shootDate)}
@@ -202,7 +206,7 @@ export default function AlbumDetailPage() {
                   </span>
                 </div>
               )}
-              <div className="text-gray-500">
+              <div className="text-muted-foreground">
                 共 {photos.length} 张照片
               </div>
             </div>
@@ -270,7 +274,7 @@ export default function AlbumDetailPage() {
         {/* 照片库 */}
         {photos.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">还没有照片</p>
+            <p className="text-muted-foreground text-lg">还没有照片</p>
           </div>
         ) : (
           <PhotoGallery
