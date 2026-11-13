@@ -8,7 +8,7 @@ export default function Home() {
 
   useEffect(() => {
     // 自动重定向到相册页面
-    router.push('/albums');
+    router.replace('/albums');
   }, [router]);
 
   return (
